@@ -1,0 +1,4 @@
+period:    101
+offset:    -3
+residuals: [0, -2, 6, -3, 3]
+lossless:  True

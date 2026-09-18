@@ -1,0 +1,4 @@
+period:    12
+offset:    7
+residuals: [0, 0]
+lossless:  True

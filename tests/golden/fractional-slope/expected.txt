@@ -1,0 +1,4 @@
+period:    2
+offset:    0
+residuals: [0, 1, 1, 2, 2]
+lossless:  True

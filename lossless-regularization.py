@@ -51,8 +51,11 @@ def cli():
 @cli.command()
 @click.option('--count', default=20, type=int, help='Number of timestamps to generate.')
 @click.option('--period', prompt='Mean period', type=int, help='Nominal period of sensor.')
-def generate(period, count):
+@click.option('--seed', default=None, type=int, help='Seed the RNG for reproducible output.')
+def generate(period, count, seed):
     """Emit timestamps jittered about multiples of PERIOD."""
+    if seed is not None:
+        random.seed(seed)
     spread = 3
     ndgk = normalize(discrete_gaussian_kernel(len(gen_tolerance_range(period, spread=spread))))
     timestamps = [
