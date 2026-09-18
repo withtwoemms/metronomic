@@ -1,6 +1,9 @@
+import re
+import sys
+
 import click
 
-from numpy import arange as range_about_zero, array, random
+from numpy import arange as range_about_zero, array, polyfit, random
 from math import exp
 from scipy import special
 
@@ -26,11 +29,30 @@ def gen_tolerance_range(period, multiplier=1, spread=1):
         raise ValueError("Tolerance range must have an odd number.")
     return tolerance_range
 
+def estimate_grid(timestamps):
+    slope, intercept = polyfit(range(len(timestamps)), timestamps, 1)
+    return round(slope), round(intercept)
 
-@click.command()
+def compute_residuals(timestamps, period, offset):
+    return [t - (offset + i * period) for i, t in enumerate(timestamps)]
+
+def reconstruct(period, offset, residuals):
+    return [offset + i * period + r for i, r in enumerate(residuals)]
+
+def parse_timestamps(text):
+    return [int(match) for match in re.findall(r'-?\d+', text)]
+
+
+@click.group()
+def cli():
+    """Simulate noisy sensor timestamps and regularize them losslessly."""
+
+
+@cli.command()
 @click.option('--count', default=20, type=int, help='Number of timestamps to generate.')
 @click.option('--period', prompt='Mean period', type=int, help='Nominal period of sensor.')
-def cli(period, count):
+def generate(period, count):
+    """Emit timestamps jittered about multiples of PERIOD."""
     spread = 3
     ndgk = normalize(discrete_gaussian_kernel(len(gen_tolerance_range(period, spread=spread))))
     timestamps = [
@@ -39,6 +61,25 @@ def cli(period, count):
         if i > 0
     ]
     click.echo(timestamps)
+
+
+@cli.command()
+@click.argument('timestamps', nargs=-1)
+def regularize(timestamps):
+    """Fit noisy TIMESTAMPS (args or stdin) to a regular grid.
+
+    Emits the grid (period, offset) plus per-timestamp residuals, from
+    which the input reconstructs exactly -- no information is lost.
+    """
+    values = parse_timestamps(' '.join(timestamps) if timestamps else sys.stdin.read())
+    if len(values) < 2:
+        raise click.UsageError("Need at least two timestamps to fit a grid.")
+    period, offset = estimate_grid(values)
+    residuals = compute_residuals(values, period, offset)
+    click.echo(f"period:    {period}")
+    click.echo(f"offset:    {offset}")
+    click.echo(f"residuals: {residuals}")
+    click.echo(f"lossless:  {reconstruct(period, offset, residuals) == values}")
 
 
 if __name__ == "__main__":
