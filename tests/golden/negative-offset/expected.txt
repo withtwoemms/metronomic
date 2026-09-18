@@ -1,4 +1,4 @@
-period:    101
+period:    102
 offset:    -3
-residuals: [0, -2, 6, -3, 3]
+residuals: [0, -3, 4, -6, 0]
 lossless:  True

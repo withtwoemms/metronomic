@@ -1,0 +1,10 @@
+[package]
+name = "metronomic"
+version = "0.1.0"
+edition = "2021"
+description = "Losslessly regularize noisy, nearly-periodic timestamps onto a grid plus residuals"
+license = "MIT"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+rand = "0.9"
