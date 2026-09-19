@@ -2,7 +2,7 @@
 
 > *Major milestones from prototype through v1. Git history is the source of
 > truth for incremental changes until a `CHANGELOG.md` exists (planned for
-> v0.2.0).*
+> v0.1.0).*
 
 ---
 
@@ -33,17 +33,17 @@ output. Any milestone that changes observable behavior lands goldens first.
 
 | Version | Milestone | Status |
 |---------|-----------|--------|
-| v0.1.0 | **Dual implementation + conformance.** `generate` (discrete-Gaussian jitter simulator, seedable) and `regularize` (least-squares grid fit, integer residuals, exact-reconstruction check) in both Python and Rust; golden-file suite (`tests/run_conformance.sh`) proving byte-identical output; cross-implementation piping verified | Complete |
-| v0.2.0 | **Packaging & name claim.** Restructure to src-layout Python package (`pyproject.toml` + uv, console entry point, pytest units) and `rust/` crate; ucon-style Makefile driving both toolchains + conformance; `CHANGELOG.md` begins; publish `metronomic` 0.2.0 to PyPI and crates.io to claim the name | Planned |
-| v0.3.0 | **Streaming (`watch`).** Line-per-event stdin → per-event `(index, residual)` output; incremental least squares with exponential forgetting so a drifting period is tracked in O(1) per event; late/missing-tick alerts from the learned residual spread | Planned |
-| v0.4.0 | **Robustness to real data.** Dropped ticks (index gaps inferred rather than assumed sequential), duplicated and out-of-order events, warm-up handling; property tests that mutate golden inputs with drops/dupes and require lossless reconstruction to survive | Planned |
-| v0.5.0 | **Residual codec (`pack`/`unpack`).** Entropy-coded residual serialization with exact round-trip; `regularize --stats` reporting residual entropy and achieved bits/timestamp so the compression claim is measured, not asserted | Planned |
-| v0.6.0 | **Python bindings over the Rust core.** PyO3/maturin wheels so `pip install metronomic` ships the Rust engine with a Python API; pure-Python implementation retires to test-oracle duty; conformance suite becomes the compatibility gate | Planned |
+| v0.0.0 | **Dual implementation + conformance.** `generate` (discrete-Gaussian jitter simulator, seedable) and `regularize` (least-squares grid fit, integer residuals, exact-reconstruction check) in both Python and Rust; golden-file suite (`tests/run_conformance.sh`) proving byte-identical output; cross-implementation piping verified | Complete |
+| v0.1.0 | **Packaging & name claim.** Restructure to src-layout Python package (`pyproject.toml` + uv, console entry point, pytest units) and `rust/` crate; ucon-style Makefile driving both toolchains + conformance; `CHANGELOG.md` begins; publish `metronomic` 0.1.0 to PyPI and crates.io to claim the name | Planned |
+| v0.2.0 | **Streaming (`watch`).** Line-per-event stdin → per-event `(index, residual)` output; incremental least squares with exponential forgetting so a drifting period is tracked in O(1) per event; late/missing-tick alerts from the learned residual spread | Planned |
+| v0.3.0 | **Robustness to real data.** Dropped ticks (index gaps inferred rather than assumed sequential), duplicated and out-of-order events, warm-up handling; property tests that mutate golden inputs with drops/dupes and require lossless reconstruction to survive | Planned |
+| v0.4.0 | **Residual codec (`pack`/`unpack`).** Entropy-coded residual serialization with exact round-trip; `regularize --stats` reporting residual entropy and achieved bits/timestamp so the compression claim is measured, not asserted | Planned |
+| v0.5.0 | **Python bindings over the Rust core.** PyO3/maturin wheels so `pip install metronomic` ships the Rust engine with a Python API; pure-Python implementation retires to test-oracle duty; conformance suite becomes the compatibility gate | Planned |
 | v1.0.0 | **API stability.** Semantic-versioning commitment on CLI surface, output formats, and codec wire format; documented residual-distribution contract; cross-compiled release binaries (macOS/Linux, x86-64/ARM) | Planned |
 
 ---
 
-## v0.2.0 — Packaging & Name Claim
+## v0.1.0 — Packaging & Name Claim
 
 **Theme:** Make metronomic installable, and make the name ours.
 
@@ -55,7 +55,7 @@ once. The restructure is mechanical because the conformance suite carries the
 spec — if both implementations still pass the goldens, the refactor changed
 nothing observable.
 
-**Shape:** root `pyproject.toml` (static `version = "0.2.0"` to start; scm
+**Shape:** root `pyproject.toml` (static `version = "0.1.0"` to start; scm
 versioning can come later), `src/metronomic/` package with `core`/`cli`
 modules and a `[project.scripts]` entry point, crate moved to `rust/`,
 Makefile with `help`/`install`/`test`/`conformance`/`build`/`clean` driving
@@ -63,7 +63,7 @@ uv and cargo from one place.
 
 ---
 
-## v0.3.0 — Streaming
+## v0.2.0 — Streaming
 
 **Theme:** From batch tool to long-running filter.
 
@@ -80,7 +80,7 @@ output joins the conformance suite via recorded input/output session goldens.
 
 ---
 
-## v0.4.0 — Robustness to Real Data
+## v0.3.0 — Robustness to Real Data
 
 **Theme:** Survive the data that motivated the tool.
 
@@ -93,7 +93,7 @@ events implied sequence numbers their protocol never carried.
 
 ---
 
-## v0.5.0 — Residual Codec
+## v0.4.0 — Residual Codec
 
 **Theme:** Cash the compression check the name has been writing.
 
@@ -105,7 +105,7 @@ conformance suite; the wire format freezes at v1.0.0, not before.
 
 ---
 
-## v0.6.0 — One Core, Two Surfaces
+## v0.5.0 — One Core, Two Surfaces
 
 **Theme:** Stop maintaining two implementations of the hot path.
 
