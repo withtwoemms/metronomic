@@ -15,26 +15,26 @@ makes the decomposition useful for timestamp compression (residuals fit in a
 few bits), clock-drift measurement, sensor-health monitoring, and gap/anomaly
 detection.
 
-## Implementations
+## Install
 
-Two implementations share one behavior, pinned by a golden-file conformance
-suite:
+```sh
+pip install metronomic       # Python CLI + importable API
+cargo install metronomic     # static binary, no runtime
+```
 
-- **`lossless-regularization.py`** — the Python reference (the original
-  prototype). Needs the venv from `make`.
-- **`metronomic/`** — the Rust crate: a fast, dependency-free-to-deploy
-  binary. `cargo build` in that directory.
+Or from a checkout: `make install` (Python, via uv) and
+`cargo build --manifest-path rust/Cargo.toml` (Rust).
 
-Both expose the same CLI:
+## Use
 
 ```
-$ metronomic generate --period 10 --count 20 [--seed N]
-[10, 22, 30, 40, 49, 59, 68, 81, 90, ...]
+$ metronomic generate --period 10 --count 20 --seed 42
+[10, 22, 30, 40, 49, 59, 68, 81, 90, 100, 108, 122, 131, 139, 149, 159, 170, 180, 190]
 
 $ metronomic generate --period 10 --count 20 | metronomic regularize
 period:    10
 offset:    10
-residuals: [0, 2, 0, 0, -1, -1, -2, 1, 0, ...]
+residuals: [0, 2, 0, 0, -1, -1, -2, 1, 0, 0, -2, 2, 1, -1, -1, -1, 0, 0, 0]
 lossless:  True
 ```
 
@@ -44,14 +44,38 @@ scale-space literature). `regularize` fits the grid by least squares
 (rounding half-to-even) and reads timestamps from arguments or stdin —
 any text containing integers works.
 
-## Conformance
+From Python:
+
+```python
+from metronomic import estimate_grid, compute_residuals, reconstruct
+
+period, offset = estimate_grid(timestamps)
+residuals = compute_residuals(timestamps, period, offset)
+assert reconstruct(period, offset, residuals) == timestamps  # always
+```
+
+## Implementations
+
+Two implementations share one behavior, pinned by a golden-file conformance
+suite:
+
+- **`src/metronomic/`** — the Python reference: importable API plus the CLI.
+- **`rust/`** — the Rust crate: the same CLI as a fast, single-file-deploy
+  binary.
 
 ```
-$ tests/run_conformance.sh lossless-regularization-venv/bin/python lossless-regularization.py
-$ tests/run_conformance.sh metronomic/target/debug/metronomic
+$ make conformance    # golden suite against BOTH implementations
+$ make test           # Python tests with coverage
+$ make test-rust      # Rust unit tests
 ```
 
 Each golden case in `tests/golden/*/` is `input.txt` (timestamps) and
-`expected.txt` (exact required output). Rust unit tests (`cargo test`) also
-cross-check the kernel against `scipy.special.iv` values and pin the
-ties-to-even rounding.
+`expected.txt` (exact required output); `tests/run_conformance.sh <command>`
+checks any implementation byte-for-byte. Rust unit tests also cross-check
+the kernel against `scipy.special.iv` values and pin ties-to-even rounding.
+
+## Status
+
+v0.1.0 handles complete, ordered batch captures. See [ROADMAP.md](ROADMAP.md)
+for what's ahead: streaming `watch`, robustness to dropped/duplicated events,
+an entropy-coded residual codec, and PyO3 bindings over the Rust core.
