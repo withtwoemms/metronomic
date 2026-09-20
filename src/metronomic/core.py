@@ -1,7 +1,10 @@
-import re
-import sys
+"""The grid decomposition: timestamp[i] = offset + i * period + residual[i].
 
-import click
+References:
+- https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.iv.html
+- https://en.wikipedia.org/wiki/Scale_space_implementation#The_discrete_Gaussian_kernel
+"""
+import re
 
 from numpy import arange as range_about_zero, array, polyfit, random
 from math import exp
@@ -42,53 +45,12 @@ def reconstruct(period, offset, residuals):
 def parse_timestamps(text):
     return [int(match) for match in re.findall(r'-?\d+', text)]
 
-
-@click.group()
-def cli():
-    """Simulate noisy sensor timestamps and regularize them losslessly."""
-
-
-@cli.command()
-@click.option('--count', default=20, type=int, help='Number of timestamps to generate.')
-@click.option('--period', prompt='Mean period', type=int, help='Nominal period of sensor.')
-@click.option('--seed', default=None, type=int, help='Seed the RNG for reproducible output.')
-def generate(period, count, seed):
-    """Emit timestamps jittered about multiples of PERIOD."""
+def generate_timestamps(period, count, spread=3, seed=None):
     if seed is not None:
         random.seed(seed)
-    spread = 3
     ndgk = normalize(discrete_gaussian_kernel(len(gen_tolerance_range(period, spread=spread))))
-    timestamps = [
+    return [
         int(sample_from_distribution(ndgk, gen_tolerance_range(period, multiplier=i, spread=spread))[-1])
         for i in range(count)
         if i > 0
     ]
-    click.echo(timestamps)
-
-
-@cli.command()
-@click.argument('timestamps', nargs=-1)
-def regularize(timestamps):
-    """Fit noisy TIMESTAMPS (args or stdin) to a regular grid.
-
-    Emits the grid (period, offset) plus per-timestamp residuals, from
-    which the input reconstructs exactly -- no information is lost.
-    """
-    values = parse_timestamps(' '.join(timestamps) if timestamps else sys.stdin.read())
-    if len(values) < 2:
-        raise click.UsageError("Need at least two timestamps to fit a grid.")
-    period, offset = estimate_grid(values)
-    residuals = compute_residuals(values, period, offset)
-    click.echo(f"period:    {period}")
-    click.echo(f"offset:    {offset}")
-    click.echo(f"residuals: {residuals}")
-    click.echo(f"lossless:  {reconstruct(period, offset, residuals) == values}")
-
-
-if __name__ == "__main__":
-    cli()
-
-
-# https://docs.scipy.org/doc/scipy/reference/generated/scipy.special.iv.html
-# https://en.wikipedia.org/wiki/Scale_space_implementation#The_discrete_Gaussian_kernel
-# https://stackoverflow.com/questions/40663597/implementing-discrete-gaussian-kernel-in-python

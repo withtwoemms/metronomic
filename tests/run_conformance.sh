@@ -6,8 +6,8 @@
 # <command...> must accept a `regularize` subcommand reading timestamps
 # from stdin, e.g.:
 #
-#   tests/run_conformance.sh lossless-regularization-venv/bin/python lossless-regularization.py
-#   tests/run_conformance.sh metronomic/target/debug/metronomic
+#   tests/run_conformance.sh .venv/bin/metronomic
+#   tests/run_conformance.sh rust/target/debug/metronomic
 set -euo pipefail
 
 golden_dir="$(cd "$(dirname "$0")/golden" && pwd)"

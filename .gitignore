@@ -1,4 +1,11 @@
-lossless-regularization-venv/
+.venv/
 __pycache__/
 *.pyc
-metronomic/target/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+coverage.xml
+rust/target/
+.uv-installed
