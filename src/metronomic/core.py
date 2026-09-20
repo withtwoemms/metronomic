@@ -6,7 +6,7 @@ References:
 """
 import re
 
-from numpy import arange as range_about_zero, array, polyfit, random
+from numpy import arange as range_about_zero, array, random
 from math import exp
 from scipy import special
 
@@ -33,7 +33,16 @@ def gen_tolerance_range(period, multiplier=1, spread=1):
     return tolerance_range
 
 def estimate_grid(timestamps):
-    slope, intercept = polyfit(range(len(timestamps)), timestamps, 1)
+    # Closed-form least squares over exact integer sums, mirroring the Rust
+    # implementation so a tie rounds identically on every platform (an SVD
+    # fit resolves an exact .5 slope by float noise, differently per OS).
+    n = len(timestamps)
+    si = n * (n - 1) // 2
+    sii = n * (n - 1) * (2 * n - 1) // 6
+    st = sum(timestamps)
+    sit = sum(i * t for i, t in enumerate(timestamps))
+    slope = (n * sit - si * st) / (n * sii - si * si)
+    intercept = (st - slope * si) / n
     return round(slope), round(intercept)
 
 def compute_residuals(timestamps, period, offset):
