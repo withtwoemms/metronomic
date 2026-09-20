@@ -1,0 +1,49 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Sync dependencies
+        run: uv sync --extra test
+      - name: Test with coverage
+        run: |
+          uv run coverage run -m pytest tests/ -q
+          uv run coverage xml
+      - name: Conformance (Python)
+        run: tests/run_conformance.sh .venv/bin/metronomic
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.xml
+          flags: python
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Test with coverage
+        working-directory: rust
+        run: cargo llvm-cov --lcov --output-path lcov.info
+      - name: Conformance (Rust)
+        run: |
+          cargo build --manifest-path rust/Cargo.toml -q
+          tests/run_conformance.sh rust/target/debug/metronomic
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: rust/lcov.info
+          flags: rust
+          token: ${{ secrets.CODECOV_TOKEN }}
